@@ -51,9 +51,19 @@
         if (command === 'DoUpdate') {
             if (navigator.onLine && !Utils.isOptionValid('test')) {
                 commiting();
+            } else if (Utils.isOptionValid('test')){
+                ResetRepo();
             }
         }
     }
+    async function ResetRepo() {
+        console.log("コミットのリセットを開始します");
+        lastCommitSHA = initialSHA;
+        localStorage.setItem('lastCommitSHA', lastCommitSHA);
+        console.log("コミットがリセットされました。");
+
+    }
+
     async function commiting() {
         var latestCommitSHA = await getLatestCommitSHA(owner, repo);
         if (lastCommitSHA === undefined || lastCommitSHA === null) {
@@ -61,40 +71,50 @@
         }
         if (lastCommitSHA !== latestCommitSHA) {
             $gameSwitches.setValue(isUpdate, true);
+            $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新:${lastCommitSHA}→${latestCommitSHA}`, "20"]);
+            $gameScreen.showPicture(55, null, 1, 640, 560, 100, 100, 255, 0);
             const commitChanges = await getCommitChanges(owner, repo, lastCommitSHA, latestCommitSHA);
+            var progress = 0;
             for (const file of commitChanges) {
                 const fileName = path.join(downloadPath, file.filename);
                 if (file.status === 'removed') {
                     if (fs.existsSync(fileName)) {
                         fs.unlinkSync(fileName);
+                        $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}を消しました`, "20"]);
+                        $gameScreen.showPicture(56, null, 1, 340, 460, 100, 100, 255, 0);
                     }
                 } else {
                     if (!fs.existsSync(fileName) || fs.readFileSync(fileName, 'utf8') !== file.content) {
                         await downloadFile(file);
+                        $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
+                        $gameScreen.showPicture(56, null, 1, 340, 460, 100, 100, 255, 0);
                     }
                 }
+                progress += 1;
+                $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "50"]);
+                $gameScreen.showPicture(57, null, 1, 840, 560, 100, 100, 255, 0);
             }
             lastCommitSHA = latestCommitSHA;
             localStorage.setItem('lastCommitSHA', lastCommitSHA);
 
             $gameSwitches.setValue(isUpdate, false);
+
+            $gameMap._interpreter.pluginCommand("D_TEXT", [`処理が終わったのでスイッチをオフにしました。`, "40"]);
+            $gameScreen.showPicture(55, null, 1, 640, 360, 100, 100, 255, 0);
+            setTimeout(function () {
+                $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後に再起動します。`, "40"]);
+                $gameScreen.showPicture(55, null, 1, 640, 360, 100, 100, 255, 0);
+                setTimeout(function () {
+                    $gameMap._interpreter.pluginCommand("D_TEXT", [`再起動します。`, "40"]);
+                    $gameScreen.showPicture(55, null, 1, 640, 360, 100, 100, 255, 0);
+                    window.close();
+                }, 3000);
+            }, 2000);
+        } else {
+            $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新はありません`, "40"]);
+            $gameScreen.showPicture(55, null, 1, 60, 540, 100, 100, 255, 0);
         }
     }
-
-
-    /*
-    async function getLatestCommitSHA(owner, repo) {
-        try {
-            var url = `https://api.github.com/repos/${owner}/${repo}/commits/main`;
-            var response = require('child_process').execSync(`curl -s "${url}"`, { encoding: 'utf8' });
-            var data = JSON.parse(response);
-            return data.sha;
-        } catch (error) {
-            var hoge = fuga;
-            throw new Error(`GitHub APIからのコミットSHAの取得中にエラーが発生しました: ${error.message}`);
-        }
-    }
-    */
 
     async function getLatestCommitSHA(owner, repo) {
         try {
@@ -112,20 +132,6 @@
         }
     }
 
-    /*
-    async function getCommitChanges(owner, repo, fromSHA, toSHA) {
-        try {
-            var url = `https://api.github.com/repos/${owner}/${repo}/compare/${fromSHA}...${toSHA}`;
-            var response = require('child_process').execSync(`curl -s "${url}"`, { encoding: 'utf8' });
-            var data = JSON.parse(response);
-            return data.files;
-        } catch (error) {
-            var hoge = nuga;
-            throw new Error(`GitHub APIからのコミット間の変更の取得中にエラーが発生しました: ${error.message}`);
-        }
-    }
-    */
-
     async function getCommitChanges(owner, repo, fromSHA, toSHA) {
         try {
             const url = `https://api.github.com/repos/${owner}/${repo}/compare/${fromSHA}...${toSHA}`;
@@ -134,11 +140,10 @@
             if (response.ok) {
                 const data = await response.json();
                 return data.files;
-            } else {
-                throw new Error(`GitHub APIからのコミット間の変更の取得中にエラーが発生しました: ${response.statusText}`);
             }
         } catch (error) {
-            throw new Error(`GitHub APIからのコミット間の変更の取得中にエラーが発生しました: ${error.message}`);
+            $gameMap._interpreter.pluginCommand("D_TEXT", [`コミットエラー！報告をお願いします`, "40"]);
+            $gameScreen.showPicture(55, null, 1, 640, 120, 100, 100, 255, 0);
         }
     }
 
