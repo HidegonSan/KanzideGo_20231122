@@ -44,7 +44,7 @@ var $plugins =
 {"name":"DRS_BoostEngineMV","status":true,"description":"ゲームスピードを動的に変更します。","parameters":{}},
 {"name":"SNZ_randomXorshiftOnline","status":false,"description":"ランダムに何かをする処理の精度を上げます　ブラウザプレイ対応","parameters":{}},
 {"name":"RGenRandomizer","status":true,"description":"ランダムな変数出力","parameters":{"exported_value":"6"}},
-{"name":"GetStageFromGitHub","status":false,"description":"GitHubから問題セットを持ってきて、ステージにしてくれます。すべき操作は以下の通りです。\r\n\r\nモード座標代入、プラグインコマンド「StageSelect_Enter」でモードに入れます。\r\n\r\n残機設定、カスタマイズ設定から戻るときにプラグインコマンド「StageSelect_ReturnFromConfig」を実行してください。","parameters":{"extra_page":"1099","extra_sub_place":"1100","common_click":"1091","edit_start":"200","font_edit":"游明朝"}},
+{"name":"GetStageFromGitHub","status":true,"description":"GitHubから問題セットを持ってきて、ステージにしてくれます。すべき操作は以下の通りです。\r\n\r\nモード座標代入、プラグインコマンド「StageSelect_Enter」でモードに入れます。\r\n\r\n残機設定、カスタマイズ設定から戻るときにプラグインコマンド「StageSelect_ReturnFromConfig」を実行してください。","parameters":{"extra_page":"1099","extra_sub_place":"1100","common_click":"1091","edit_start":"200","font_edit":"游明朝"}},
 {"name":"varIDforPlugin","status":true,"description":"【末尾に導入】\r\nプラグイン引数に変数の値を採用","parameters":{}},
 {"name":"GitHubAutoUpdater","status":true,"description":"Allows automatic updates from a GitHub repository.","parameters":{"Owner":"Formidi","Repo":"KanzideGo","DPath":"./www/","InitialSHA":"046f733399e3ec7ac3df3ac54550b0121e9e3d50","isUpdate":"230"}}
 ];
