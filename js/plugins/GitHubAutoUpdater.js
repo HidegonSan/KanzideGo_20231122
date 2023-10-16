@@ -27,6 +27,10 @@
  * @type number
  * @default 230
  * 
+ * @param pictureName
+ * @desc 最新バージョンであることを示すピクチャの名前
+ * @default Party_Oa
+ * 
  * @help
  * Githubのほうに更新があったとき、変更箇所をダウンロードして適切な場所に配置してくれるスクリプトですが、まだいろいろと問題点があります。
  * 
@@ -37,8 +41,9 @@
     var owner = String(parameters['Owner'] || 'your_owner');
     var repo = String(parameters['Repo'] || 'your_repo');
     var downloadPath = String(parameters['DPath'] || './');
-    var initialSHA = String(parameters['InitialSHA'] || ' initial_SHA');
+    var initialSHA = String(parameters['InitialSHA'] || 'initial_SHA');
     var isUpdate = Number(parameters['isUpdate'] || 230);
+    var pictureName = parameters['pictureName'] || 'Party_Oa';
 
     const fs = require('fs');
     const path = require('path');
@@ -72,7 +77,7 @@
         if (lastCommitSHA !== latestCommitSHA) {
             $gameSwitches.setValue(isUpdate, true);
             $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新:${lastCommitSHA}→${latestCommitSHA}`, "20"]);
-            $gameScreen.showPicture(55, null, 1, 640, 560, 100, 100, 255, 0);
+            $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
             const commitChanges = await getCommitChanges(owner, repo, lastCommitSHA, latestCommitSHA);
             var progress = 0;
             for (const file of commitChanges) {
@@ -80,39 +85,44 @@
                 if (file.status === 'removed') {
                     if (fs.existsSync(fileName)) {
                         fs.unlinkSync(fileName);
-                        $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}を消しました`, "20"]);
-                        $gameScreen.showPicture(56, null, 1, 340, 460, 100, 100, 255, 0);
+                        $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}を消去しました。`, "20"]);
+                        $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
                     }
                 } else {
                     if (!fs.existsSync(fileName) || fs.readFileSync(fileName, 'utf8') !== file.content) {
                         await downloadFile(file);
                         $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
-                        $gameScreen.showPicture(56, null, 1, 340, 460, 100, 100, 255, 0);
+                        $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
                     }
                 }
                 progress += 1;
-                $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "50"]);
-                $gameScreen.showPicture(57, null, 1, 840, 560, 100, 100, 255, 0);
+                $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "20"]);
+                $gameScreen.showPicture(57, null, 0, 10, 35, 100, 100, 255, 0);
             }
             lastCommitSHA = latestCommitSHA;
             localStorage.setItem('lastCommitSHA', lastCommitSHA);
 
             $gameSwitches.setValue(isUpdate, false);
 
-            $gameMap._interpreter.pluginCommand("D_TEXT", [`処理が終わったのでスイッチをオフにしました。`, "40"]);
-            $gameScreen.showPicture(55, null, 1, 640, 360, 100, 100, 255, 0);
+            $gameMap._interpreter.pluginCommand("D_TEXT", [`処理完了`, "20"]);
+            $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
             setTimeout(function () {
-                $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後に再起動します。`, "40"]);
-                $gameScreen.showPicture(55, null, 1, 640, 360, 100, 100, 255, 0);
+                $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後にシャットダウンします。`, "20"]);
+                $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
                 setTimeout(function () {
-                    $gameMap._interpreter.pluginCommand("D_TEXT", [`再起動します。`, "40"]);
-                    $gameScreen.showPicture(55, null, 1, 640, 360, 100, 100, 255, 0);
-                    window.close();
-                }, 3000);
-            }, 2000);
+                    $gameMap._interpreter.pluginCommand("D_TEXT", [`2秒後にシャットダウンします。`, "20"]);
+                    $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
+                    setTimeout(function () {
+                        $gameMap._interpreter.pluginCommand("D_TEXT", [`1秒後にシャットダウンします。`, "20"]);
+                        $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
+                        setTimeout(function () {
+                            window.close();
+                        }, 1000);
+                    }, 1000);
+                }, 1000);
+            }, 1000);
         } else {
-            $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新はありません`, "40"]);
-            $gameScreen.showPicture(55, null, 1, 60, 540, 100, 100, 255, 0);
+            $gameScreen.showPicture(55, pictureName, 0, 0, 0, 100, 100, 255, 0);
         }
     }
 

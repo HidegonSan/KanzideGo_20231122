@@ -4,9 +4,15 @@
 /*:
  * @plugindesc GitHubから問題セットを持ってきて、ステージにしてくれます。すべき操作は以下の通りです。
  * 
- * モード座標代入、プラグインコマンド「StageSelect_Enter」でモードに入れます。
+ * モード座標代入(コモンイベント219)、プラグインコマンド「StageSelect_Enter」、その10フレーム後でedit_startをオンにすることでモードに入れます。
+ * 
+ * edit_startがオンの間、並列処理で「CustomStageParallel」を実行することで、操作が可能です。
  * 
  * 残機設定、カスタマイズ設定から戻るときにプラグインコマンド「StageSelect_ReturnFromConfig」を実行してください。
+ * 
+ * ステージに入っている間は設定難易度を1000にしています。
+ * 
+ * 問題ジェネレーターで、本来の処理の代わりにプラグインコマンド「Generator 2」を行うことで問題が代入されます。
  * 
  * @author chuukunn
  *
@@ -23,12 +29,22 @@
  * @param common_click
  * @desc クリックする際にオンにされるスイッチの位置。この値、+1、+2までが使われる。
  * @type number
- * @default 1091
+ * @default 193
+ * 
+ * @param edit_tmp
+ * @desc エディットステージでステージ名として一時的に使用する変数。
+ * @type number
+ * @default 1090
  * 
  * @param edit_start
  * @desc エディットステージの画面を開いている時trueになる変数の番号。
  * @type number
  * @default 200
+ * 
+ * @param edit_ok_switch
+ * @desc エディットステージを選択したときにオンになるスイッチ(★エクストラ-開始前)。
+ * @type number
+ * @default 199
  * 
  * @param font_edit
  * @desc テキストのフォント
@@ -41,8 +57,10 @@
     var parameters = PluginManager.parameters('GetStageFromGitHub');
     var extra_page = Number(parameters['extra_page'] || 1099);
     var extra_sub_place = Number(parameters['extra_sub_place'] || 1100);
-    var common_click = Number(parameters['common_click'] || 1091);
+    var common_click = Number(parameters['common_click'] || 193);
 
+    var edit_ok_switch = Number(parameters['edit_tmp'] || 199);
+    var edit_tmp = Number(parameters['edit_tmp'] || 1090);
     var edit_start = Number(parameters['edit_start'] || 200);
     var font_edit = (parameters['font_edit'] || "游明朝");
 
@@ -145,11 +163,11 @@
     Game_Screen.prototype.showPicture = function (pictureId, pictureName, origin, x, y, scaleX, scaleY, opacity, blendMode) {
         if (pictureName === null || pictureName === undefined) {
             originalShowPicture.call(this, pictureId, pictureName, origin, x, y, scaleX, scaleY, opacity, blendMode);
-        }else if (!pictureName.startsWith("[")) {
+        } else if (!pictureName.startsWith("[")) {
             originalShowPicture.call(this, pictureId, pictureName, origin, x, y, scaleX, scaleY, opacity, blendMode);
         } else {
             $gameMap._interpreter.pluginCommand("D_TEXT_SETTING", ["FONT", font_edit]);
-            $gameMap._interpreter.pluginCommand("D_TEXT", [pictureName, (scaleX + scaleY).toString()]);
+            $gameMap._interpreter.pluginCommand("D_TEXT", [pictureName, "200"]);
             originalShowPicture.call(this, pictureId, null, origin, x, y, scaleX, scaleY, opacity, blendMode);
         }
     };
@@ -161,10 +179,10 @@
             if ($gameVariables.value(196) == 2 || $gameSwitches.value(76) || $gameSwitches.value(67) || !$gameSwitches.value(edit_start)) {
 
             }
-            else if (Input.isTriggered("up")) {
+            else if (Input.isTriggered("up") && $gameVariables.value(196) == 1) {
                 $gameTemp.reserveCommonEvent(294);
             }
-            else if (Input.isTriggered("down")) {
+            else if (Input.isTriggered("down") && $gameVariables.value(196) == 1) {
                 $gameTemp.reserveCommonEvent(278);
             }
             else if (Input.isTriggered("left") && $gameVariables.value(196) == 1) {
@@ -175,7 +193,7 @@
             }
             else if (Input.isTriggered("control")) {
             }
-            else if (Input.isTriggered("ok")) {
+            else if (Input.isTriggered("ok") && $gameVariables.value(196) == 1) {
                 const customList = getCustomStageList();
                 if ($gameVariables.value(extra_page) * 3 - 3 + $gameVariables.value(extra_sub_place) - 1 >= customList.length) {
                     AudioManager.playSe({ name: 'Cancel', volume: 90, pitch: 100, pan: 0 });
@@ -184,7 +202,7 @@
                 $gameMap._interpreter.pluginCommand("StageSelect_OK_1");
                 setTimeout(function () {
                     $gameMap._interpreter.pluginCommand("StageSelect_OK_2");
-                }, 167);
+                }, 250);
             }
             else if (Input.isTriggered("escape")) {
                 $gameMap._interpreter.pluginCommand("StageSelect_Escape_1");
@@ -207,6 +225,7 @@
         }
         else if (command === 'StageSelect_Enter') {
             $gameVariables.setValue(extra_page, 1);
+            $gameVariables.setValue(extra_sub_place, 1);
             $gameVariables.setValue(321, 274);
             $gameVariables.setValue(323, 640);
             $gameVariables.setValue(325, 1006);
@@ -214,22 +233,31 @@
             $gameVariables.setValue(324, 358);
             $gameVariables.setValue(326, 358);
 
-            $gameVariables.setValue(196, 1);
-            const chList = [225, 226, 227, 228, 230, 232, 233, 234, 235, 298, 299, 300, 670, 700];
-            chList.forEach(item => {
-                $gameMap._interpreter.pluginCommand("Chikuwa", [item.toString(), ">", item.toString()]);
-            });
             //各種設定の押し出し
-            $gameTemp.reserveCommonEvent(205);
+            //コモンイベント205
+            $gameScreen.movePicture(11, 1, $gameVariables.value(171), $gameVariables.value(172), 100, 100, 0, 0, 10);
+            $gameScreen.movePicture(12, 1, $gameVariables.value(173), $gameVariables.value(174), 100, 100, 0, 0, 10);
+            $gameScreen.movePicture(13, 1, $gameVariables.value(175), $gameVariables.value(176), 100, 100, 0, 0, 10);
+            $gameScreen.movePicture(14, 1, $gameVariables.value(177), $gameVariables.value(177), 100, 100, 0, 0, 10);
+            $gameScreen.movePicture(18, 1, 1066, 30, 100, 100, 0, 0, 10);
+            //コモンイベント205 終わり
+
+
             //メニューカーソルの消去
             $gameScreen.movePicture(10, 1, 640, 360, 100, 100, 0, 0, 10);
+
             //ピクチャ番号19にデフォルト難易度画面を作成
-            //未完成
-            //
+            $gameMap._interpreter.pluginCommand("DrawStages");
+            //ピクチャ番号19にデフォルト難易度画面を作成 終わり
+
+            //クリックの当たり判定
             $gameScreen.showPicture(71, "Menu_difficult_decide", 1, 274, 358, 85, 100, 0, 0);
             $gameScreen.showPicture(72, "Menu_difficult_decide", 1, 640, 358, 85, 100, 0, 0);
             $gameScreen.showPicture(73, "Menu_difficult_decide", 1, 1006, 358, 85, 100, 0, 0);
+            //クリックの当たり判定 終わり
 
+
+            //カーソル
             $gameScreen.showPicture(53, "Select_L", 1, 66, 358, 100, 100, 0, 0);
             $gameScreen.showPicture(54, "Select_R", 1, 1213, 358, 100, 100, 0, 0);
             $gameScreen.showPicture(55, "Select_Shift_A", 1, 213, 680, 100, 100, 0, 0);
@@ -248,20 +276,36 @@
             $gameMap._interpreter.pluginCommand("P_CALL_KEY_BIND", ["56", "down"]);
             $gameMap._interpreter.pluginCommand("P_CALL_KEY_BIND", ["57", "ok"]);
             $gameMap._interpreter.pluginCommand("P_CALL_KEY_BIND", ["58", "up"]);
+            //カーソル 終わり
 
+            //ちくわ変数
+            const chList = [225, 226, 227, 228, 230, 232, 233, 234, 235, 298, 299, 300, 670, 700];
+            chList.forEach(item => {
+                $gameMap._interpreter.pluginCommand("Chikuwa", [item.toString(), ">", item.toString()]);
+            });
+            //ちくわ変数 終わり
+
+            //コモンイベント276
             $gameMap._interpreter.pluginCommand("P_CALL_SWITCH", ["71", common_click.toString(), "1", "OFF"]);
             $gameMap._interpreter.pluginCommand("P_CALL_SWITCH", ["72", (parseInt(common_click) + 1).toString(), "1", "OFF"]);
             $gameMap._interpreter.pluginCommand("P_CALL_SWITCH", ["73", (parseInt(common_click) + 2).toString(), "1", "OFF"]);
+            //コモンイベント276 終わり
+
+            //コモンイベント273
             $gameMap._interpreter.pluginCommand("PA_INIT", ["2", "1", "横", "45"]);
             $gameScreen.showPicture(50, "Custom_D_s2", 1, $gameVariables.value(319 + $gameVariables.value(extra_sub_place) * 2), $gameVariables.value(320 + $gameVariables.value(extra_sub_place) * 2), 100, 100, 0, 0);
             $gameScreen.movePicture(50, 1, $gameVariables.value(319 + $gameVariables.value(extra_sub_place) * 2), $gameVariables.value(320 + $gameVariables.value(extra_sub_place) * 2), 100, 100, 255, 0, 10);
             $gameMap._interpreter.pluginCommand("PA_START_LOOP", ["50", "1"]);
-            $gameMap._interpreter.pluginCommand("DrawStages");
-            $gameSwitches.setValue(edit_start, true);
+            //コモンイベント273 終わり
+
+            //コース代入？
+            $gameScreen.movePicture(50, 1, $gameVariables.value(319 + $gameVariables.value(extra_sub_place) * 2), $gameVariables.value(320 + $gameVariables.value(extra_sub_place) * 2), 100, 100, 255, 0, 1);
+
 
         }
         else if (command === 'StageSelect_Escape_1') {
             $gameVariables.setValue(196, 2);
+            AudioManager.playSe({ name: 'Cancel', volume: 90, pitch: 100, pan: 0 });
             $gameScreen.erasePicture(50);
             $gameScreen.movePicture(10, 1, 640, 360, 100, 100, 255, 0, 10);
             $gameScreen.movePicture(19, 1, 640, 360, 100, 100, 0, 0, 10);
@@ -276,27 +320,23 @@
             for (var i = pictureNum; i < pictureNum + 4; i++) {
                 $gameScreen.erasePicture(i);
             }
-            for (var i = pictureNum + 5; i < pictureNum + 13; i++) {
-                $gameScreen.erasePicture(i);
-            }
-            for (var i = 2; i < 5; i++) {
-                $gameScreen.erasePicture(i);
-            }
             $gameSwitches.setValue(edit_start, false);
 
         }
         else if (command === 'StageSelect_Escape_2') {
+            //スイッチ登録の削除
             for (var i = 53; i < 60; i++) {
                 $gameMap._interpreter.pluginCommand("P_CALL_CE_REMOVE", [i.toString()]);
             }
+            //スイッチ登録の削除 終わり
+
             $gameTemp.reserveCommonEvent(231);
-            for (var i = 71; i < 74; i++) {
-                $gameMap._interpreter.pluginCommand("P_CALL_CE_REMOVE", [i.toString()]);
-            }
-            $gameTemp.reserveCommonEvent(203);
+            $gameTemp.reserveCommonEvent(251);
             $gameTemp.reserveCommonEvent(206);
+            $gameTemp.reserveCommonEvent(203);
             $gameVariables.setValue(196, 0);
             $gameVariables.setValue(15, 0);
+            $gameSwitches.setValue(edit_start, false);
         }
         else if (command === 'StageSelect_ReturnFromConfig') {
             $gameMap._interpreter.pluginCommand("PA_INIT", ["2", "1", "横", "45"]);
@@ -312,14 +352,20 @@
         }
         else if (command === 'StageSelect_OK_1') {
             $gameVariables.setValue(196, 2);
+            $gameVariables.setValue(15, 1000);
+            var page = $gameVariables.value(extra_page);
+            var place = $gameVariables.value(extra_sub_place);
+            var stage_index = page * 3 - 3 + place - 1;
+            var stage = getCustomStageList()[stage_index];
+            $gameVariables.setValue(edit_tmp, stage.dataName);
             AudioManager.playSe({ name: 'Decide', volume: 90, pitch: 100, pan: 0 });
             var p = parseInt(319) + $gameVariables.value(extra_sub_place) * 2;
             $gameScreen.showPicture(99, "Menu_difficult_decide", 1, $gameVariables.value(p), $gameVariables.value(p + 1), 100, 100, 128, 0);
             $gameScreen.movePicture(99, 1, $gameVariables.value(p), $gameVariables.value(p + 1), 150, 150, 0, 0, 15);
-            $gameScreen.showPicture(100, "bg_white", 0, 0, 0, 100, 100, 0, 0);
-            $gameScreen.movePicture(100, 0, 0, 0, 100, 100, 255, 0, 15);
         }
         else if (command === 'StageSelect_OK_2') {
+            $gameScreen.showPicture(100, "bg_white", 0, 0, 0, 100, 100, 0, 0);
+            $gameScreen.movePicture(100, 0, 0, 0, 100, 100, 255, 0, 15);
             $gameTemp.reserveCommonEvent(677);
             $gameMap._interpreter.pluginCommand("P_CALL_CE_REMOVE", ["11"]);
             $gameMap._interpreter.pluginCommand("P_CALL_CE_REMOVE", ["12"]);
@@ -361,13 +407,8 @@
             for (var i = 75; i < 78; i++) {
                 $gameMap._interpreter.pluginCommand("P_CALL_CE_REMOVE", [i.toString()]);
             }
-            var page = $gameVariables.value(extra_page);
-            var place = $gameVariables.value(extra_sub_place);
-            var stage_index = page * 3 - 3 + place - 1;
-            //上2つを使ってステージの判別
-            var stage = getCustomStageList()[stage_index];
-            $gameMap._interpreter.pluginCommand("Generator", [stage.dataName, "1"]);
-            $gamePlayer.reserveTransfer(2, 13, 7);
+            $gameSwitches.setValue(edit_ok_switch, true);
+
         }
         else if (command === 'StageSelect_L_or_R') {
             var L_or_R = args[0];//引数としてLかRを与える
@@ -402,6 +443,7 @@
 
         }
         else if (command === 'StageSelect_1_or_2_or_3') {
+            console.log(" button");
             var num = parseInt(args[0]);//引数として1か2か3を与える
             AudioManager.playSe({ name: 'Cursor_X', volume: 90, pitch: 100, pan: 0 });
             $gameVariables.setValue(extra_sub_place, num);
@@ -420,6 +462,7 @@
                     $gameMap._interpreter.pluginCommand("D_TEXT_SETTING", ["FONT", font_edit]);
                     $gameMap._interpreter.pluginCommand("D_TEXT", [customList[i].name, "40"]);
                     $gameScreen.showPicture(pictureNum + 0 + p, null, 1, 274 + p * 366, 170, 85, 100, 255, 0);
+                    /*
                     $gameMap._interpreter.pluginCommand("D_TEXT_SETTING", ["FONT", font_edit]);
                     $gameMap._interpreter.pluginCommand("D_TEXT", [customList[i].difficulty, "24"]);
                     if (pictureNum + 4 + p == 10) {
@@ -433,10 +476,13 @@
                     $gameMap._interpreter.pluginCommand("D_TEXT_SETTING", ["FONT", font_edit]);
                     $gameMap._interpreter.pluginCommand("D_TEXT", [customList[i].discription_2, "24"]);
                     $gameScreen.showPicture(pictureNum + 10 + p, null, 1, 274 + p * 366, 590, 85, 100, 255, 0);
-                } else {
+                    */
+                }
+                else {
                     $gameMap._interpreter.pluginCommand("D_TEXT_SETTING", ["FONT", font_edit]);
                     $gameMap._interpreter.pluginCommand("D_TEXT", ["Coming Soon...", "32"]);
                     $gameScreen.showPicture(pictureNum + 0 + p, null, 1, 274 + p * 366, 358, 85, 100, 255, 0);
+                    /*
                     if (pictureNum + 4 + p == 10) {
                         $gameScreen.erasePicture(9);
                     } else {
@@ -444,6 +490,7 @@
                     }
                     $gameScreen.erasePicture(pictureNum + 7 + p);
                     $gameScreen.erasePicture(pictureNum + 10 + p);
+                    */
                 }
             }
 
@@ -581,11 +628,11 @@
                 jsonData[parent_key]["10"] = "000000000000000000000";
                 jsonData[parent_key]["11"] = "000000000000000000000";
             }
-            jsonData[parent_key]["13"] = genre_13;
-            jsonData[parent_key]["14"] = num_of_chr_14;
+            jsonData[parent_key]["13"] = genre_13 || "";
+            jsonData[parent_key]["14"] = num_of_chr_14 || 0;
             jsonData[parent_key]["18"] = createString(questionText_e, questionText, questionText_a);
             jsonData[parent_key]["19"] = comment1_19;
-            jsonData[parent_key]["20"] = comment2_20;
+            jsonData[parent_key]["20"] = comment2_20 || "";
             jsonData[parent_key]["Level"] = level;
             if (parseInt(questionText_e.length) + parseInt(questionText.length) + parseInt(questionText_a.length) >= 5) {
                 jsonData[parent_key]["169"] = "1";
@@ -612,7 +659,8 @@
         };
         stageData.push(newStage);
     }
-    async function Generator(stage_name, stage_type) {
+    async function Generator(stage_type) {
+        var stage_name = $gameVariables.value(edit_tmp);
         $gameSwitches.setValue(60, false);
         var num;
         if (stage_type == 1) {
@@ -657,18 +705,18 @@
                     $gameVariables.setValue(380, difficulty);
                 } else {
                     //残機(6,7,8,9)
-                    $gameVariables.setValue(774, i - 5);
+                    $gameVariables.setValue(774, i - 5 + difficulty * 4 - 4);
                 }
             } else if (count == 8) {
                 if (i < 3) {
                     //本筋(0,1,2)
-                    $gameVariables.setValue(7, difficulty * 3 - 3 + i);
+                    $gameVariables.setValue(7, difficulty * 3 - 2 + i);
                 } else if (i < 4) {
                     //いれかえ(3)
                     $gameVariables.setValue(380, difficulty);
                 } else {
                     //残機(4,5,6,7)
-                    $gameVariables.setValue(774, i - 3);
+                    $gameVariables.setValue(774, i - 3 + difficulty * 4 - 4);
                 }
             } else {
                 if (i == 0) {
@@ -680,7 +728,10 @@
                 }
             }
             //回答代入
+            $gameVariables.setValue(13, 0);
+            $gameVariables.setValue(17, 0);
             for (const [key, value] of Object.entries(selectedIndex)) {
+                //console.log(`${key} - ${value}`);
                 if (!isNaN(key)) {
                     $gameVariables.setValue(parseInt(key), value);
                     if (key == "13") {
@@ -703,6 +754,7 @@
                     }
                 }
             }
+            console.log(`${$gameVariables.value(7)},${$gameVariables.value(380)},${$gameVariables.value(774)}`);
 
             //回答記憶
             $gameTemp.reserveCommonEvent(7);
@@ -738,9 +790,9 @@
     }
     function createDTextString(A, B, C, chr, color) {
         if (chr != "") {
-            return `[${A}]<\\c[${color}]${B}\\c[0]|\\c[15]${chr}\\c[0]>[${C}]`;
+            return `[\\c[0]${A}]<\\c[${color}]${B}\\c[0]|\\c[15]${chr}\\c[0]>[${C}]`;
         }
-        return `[${A}]\\c[${color}]${B}\\c[0][${C}]`;
+        return `[\\c[0]${A}]\\c[${color}]${B}\\c[0][${C}]`;
     }
     function parseText(text) {
         let x = "";
