@@ -22,6 +22,11 @@
  * @desc 最初期バージョンのSHA
  * @default initial_SHA
  * 
+ * @param Judge
+ * @desc 更新判定が終わったことを示すスイッチの番号。
+ * @type number
+ * @default 228
+ * 
  * @param isUpdate
  * @desc 更新中であることを示すスイッチの番号。
  * @type number
@@ -42,6 +47,7 @@
     var repo = String(parameters['Repo'] || 'your_repo');
     var downloadPath = String(parameters['DPath'] || './');
     var initialSHA = String(parameters['InitialSHA'] || 'initial_SHA');
+    var Judge = Number(parameters['Judge'] || 228);
     var isUpdate = Number(parameters['isUpdate'] || 230);
     var pictureName = parameters['pictureName'] || 'Party_Oa';
 
@@ -122,6 +128,7 @@
                 }, 1000);
             }, 1000);
         } else {
+            $gameSwitches.setValue(Judge, true);
             $gameScreen.showPicture(55, pictureName, 0, 0, 0, 100, 100, 255, 0);
         }
     }

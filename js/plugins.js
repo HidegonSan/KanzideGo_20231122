@@ -46,5 +46,5 @@ var $plugins =
 {"name":"RGenRandomizer","status":true,"description":"ランダムな変数出力","parameters":{"exported_value":"6"}},
 {"name":"GetStageFromGitHub","status":true,"description":"GitHubから問題セットを持ってきて、ステージにしてくれます。すべき操作は以下の通りです。\r\n\r\nモード座標代入、プラグインコマンド「StageSelect_Enter」でモードに入れます。\r\n\r\n残機設定、カスタマイズ設定から戻るときにプラグインコマンド「StageSelect_ReturnFromConfig」を実行してください。","parameters":{"extra_page":"1099","extra_sub_place":"1100","common_click":"1091","edit_start":"200","font_edit":"游明朝"}},
 {"name":"varIDforPlugin","status":true,"description":"【末尾に導入】\r\nプラグイン引数に変数の値を採用","parameters":{}},
-{"name":"GitHubAutoUpdater","status":true,"description":"Allows automatic updates from a GitHub repository.","parameters":{"Owner":"Formidi","Repo":"KanzideGo","DPath":"./www/","InitialSHA":"595a86237ecd2010f2a560a744ae2465815ba90a","isUpdate":"230","pictureName":"Version_Latest"}}
+{"name":"GitHubAutoUpdater","status":true,"description":"Allows automatic updates from a GitHub repository.","parameters":{"Owner":"Formidi","Repo":"KanzideGo","DPath":"./www/","InitialSHA":"595a86237ecd2010f2a560a744ae2465815ba90a","Judge":"232","isUpdate":"230","pictureName":"Version_Latest"}}
 ];
