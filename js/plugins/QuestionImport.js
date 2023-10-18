@@ -8,7 +8,7 @@
  * プロジェクト名/excelData/editLevel直下にある.csvファイルを読み込み、問題として出力できるようにしたものです。
  * 読み込められる.csvに関しては、現状では以前いただいた.excelデータを.csvに変換した際に現れたものを読み込めるようにしてあります。
  *
- * 
+ *
 @author
  chuukunn
  *
@@ -68,7 +68,7 @@
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
 
-        if (command === 'QJson') {
+        if (command === 'Qjson') {
             var list = DataManager.loadCustomData();
             var dict = list[args[0]];
             for (const [key, value] of Object.entries(dict)) {
