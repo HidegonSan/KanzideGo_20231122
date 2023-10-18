@@ -103,6 +103,8 @@
                                 $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
                                 progress += 1;
                                 $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
+                                $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "20"]);
+                                $gameScreen.showPicture(57, null, 0, 10, 35, 100, 100, 255, 0);
                             })
                             .catch(error => {
                                 console.error(`Error: ${error.message}`);
@@ -111,8 +113,6 @@
                     }
                 }
 
-                $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "20"]);
-                $gameScreen.showPicture(57, null, 0, 10, 35, 100, 100, 255, 0);
             }
 
             await Promise.all(downloadPromises);
