@@ -85,9 +85,11 @@
             $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新:${lastCommitSHA}→${latestCommitSHA}`, "20"]);
             $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
             const commitChanges = await getCommitChanges(owner, repo, lastCommitSHA, latestCommitSHA);
+            const downloadPromises = [];
             var progress = 0;
             for (const file of commitChanges) {
                 const fileName = path.join(downloadPath, file.filename);
+
                 if (file.status === 'removed') {
                     if (fs.existsSync(fileName)) {
                         fs.unlinkSync(fileName);
@@ -96,15 +98,25 @@
                     }
                 } else {
                     if (!fs.existsSync(fileName) || fs.readFileSync(fileName, 'utf8') !== file.content) {
-                        await downloadFile(file);
-                        $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
-                        $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
+                        const downloadPromise = downloadFile(file, fileName)
+                            .then(() => {
+                                $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
+                                progress += 1;
+                                $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
+                            })
+                            .catch(error => {
+                                console.error(`Error: ${error.message}`);
+                            });
+                        downloadPromises.push(downloadPromise);
                     }
                 }
-                progress += 1;
+
                 $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "20"]);
                 $gameScreen.showPicture(57, null, 0, 10, 35, 100, 100, 255, 0);
             }
+
+            await Promise.all(downloadPromises);
+
             lastCommitSHA = latestCommitSHA;
             localStorage.setItem('lastCommitSHA', lastCommitSHA);
 
@@ -163,54 +175,27 @@
             $gameScreen.showPicture(55, null, 1, 640, 120, 100, 100, 255, 0);
         }
     }
-
-    async function downloadFile(file) {
+    function downloadFile(file, fileName) {
         const fileUrl = file.raw_url;
-        const fileResponse = await fetch(fileUrl);
-        const fileContent = await fileResponse.arrayBuffer();
-        const fileName = path.join(downloadPath, file.filename);
 
-        try {
-            const response = await fetch(fileUrl);
-            if (!response.ok) {
-                throw new Error(`Failed to download file: ${response.statusText}`);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const response = await fetch(fileUrl);
+                if (!response.ok) {
+                    reject(new Error(`Failed to download file: ${response.statusText}`));
+                    return;
+                }
+
+                const fileContent = await response.arrayBuffer();
+                createDirectoryRecursive(path.dirname(fileName.replace(/\\/g, '/')));
+                fs.writeFileSync(fileName, Buffer.from(fileContent), 'binary');
+                console.log('ダウンロード: ' + file.filename);
+                resolve();
+            } catch (error) {
+                reject(new Error(`ファイルのダウンロード中にエラーが発生しました: ${error.message}`));
             }
-            createDirectoryRecursive(path.dirname(fileName.replace(/\\/g, '/')));
-            fs.writeFileSync(fileName, Buffer.from(fileContent), 'binary');
-            console.log('ダウンロード: ' + file.filename);
-        } catch (error) {
-            throw new Error(`ファイルのダウンロード中にエラーが発生しました: ${error.message}`);
-        }
+        });
     }
-
-    /*
-    async function DownLoad() {
-        await downloadAllFiles("");
-        storeCommitSHA(lastCommitSHA);
-    }
-
-    async function downloadAllFiles(dirPath = '') {
-        const apiEndpoint = `https://api.github.com/repos/${owner}/${repo}/contents/${dirPath}`;
-        const response = await fetch(apiEndpoint);
-        const contents = await response.json();
-
-        for (const content of contents) {
-            const contentPath = content.path;
-            const contentUrl = content.download_url;
-            const fullPath = path.join(downloadPath, contentPath);
-
-            if (content.type === 'file') {
-                // ファイルをダウンロード
-                const fileResponse = await fetch(contentUrl);
-                const fileContent = await fileResponse.arrayBuffer();
-                createDirectoryRecursive(path.dirname(fullPath));
-                fs.writeFileSync(fullPath, Buffer.from(fileContent), 'binary');
-            } else if (content.type === 'dir') {
-                await downloadAllFiles(contentPath);
-            }
-        }
-    }
-    */
 
     function createDirectoryRecursive(dirPath) {
         var normalizedPath = path.normalize(dirPath);

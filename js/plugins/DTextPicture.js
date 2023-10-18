@@ -90,6 +90,7 @@
  * @desc フレームウィンドウの余白です。
  * @default 18
  * @type number
+ * 
  *
  * @param padCharacter
  * @text 埋め文字
@@ -212,6 +213,8 @@
 (function() {
     'use strict';
 
+    var padempty = 200;
+    var padempty_lite = 32;
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
@@ -520,11 +523,21 @@
         var RubyOffset = 0;
         if ($gameScreen.isSettingDText() && !name) {
             this.isDTextPicture = true;
-            if (origin === 0) {
-                RubyOffset = 32;//余白を広げたい場合はこの変数の値を目標値にする
+            if($gameScreen.getDTextPictureInfo().size >= 100){
+                if (origin === 0) {
+                    RubyOffset = padempty;
 
-            } else if (origin === 1) {
-                RubyOffset = 16;//余白を広げたい場合はこの変数の値を目標値の半分にする
+                } else if (origin === 1) {
+                    RubyOffset = padempty / 2;
+                }
+            }else {
+
+                if (origin === 0) {
+                    RubyOffset = padempty_lite;
+
+                } else if (origin === 1) {
+                    RubyOffset = padempty_lite / 2;
+                }
             }
             arguments[0] = Date.now().toString();
             this.dTextInfo = $gameScreen.getDTextPictureInfo();
@@ -543,10 +556,21 @@
     Game_Picture.prototype.move = function (origin, x, y, scaleX, scaleY, opacity, blendMode, duration) {
         var RubyOffset = 0;
         if (this.isDTextPicture) {
-            if (origin === 0) {
-                RubyOffset = 32;//余白を広げたい場合はこの変数の値を目標値にする
-            } else if (origin === 1) {
-                RubyOffset = 16;//余白を広げたい場合はこの変数の値を目標値の半分にする
+            if ($gameScreen.getDTextPictureInfo().size >= 100) {
+                if (origin === 0) {
+                    RubyOffset = padempty;
+
+                } else if (origin === 1) {
+                    RubyOffset = padempty / 2;
+                }
+            } else {
+
+                if (origin === 0) {
+                    RubyOffset = padempty_lite;
+
+                } else if (origin === 1) {
+                    RubyOffset = padempty_lite / 2;
+                }
             }
             if (this.dTextInfo.isRuby) {
                 arguments[1] -= RubyOffset;
@@ -801,13 +825,12 @@
         textState.height = this.hiddenWindow.calcTextHeight(textState, false);
         textState.index = 0;
         if (this.dTextInfo.isRuby) {
-            if (textState.left == 0) {
-                textState.y += 32;//余白を広げたい場合はこの変数の値を目標値にする
+            if (this.dTextInfo.size >= 100) {
+                textState.y += padempty;
             } else {
-                textState.y += 32;//余白を広げたい場合はこの変数の値を目標値にする
+                textState.y += padempty_lite;
             }
         }
-
         while (textState.text[textState.index]) {
             this._processCharacter(textState, bitmap);
         }
@@ -864,7 +887,7 @@
             var c = textState.text[textState.index++];
         } else if (textState.text[textState.index] === '|') {
             this._endRuby(textState);
-            this._startRubyText(textState);
+            this._startRubyText(textState, bitmap);
             var c = textState.text[textState.index++];
         } else if (textState.text[textState.index] === '>') {
             this._endRubyText(textState, bitmap);
@@ -878,7 +901,7 @@
         } else {
             if (textState.inRubyText === true) {
                 var c = textState.text[textState.index++];
-                this._RubyTextAdd(textState,c);
+                this._RubyTextAdd(textState, c);
             } else {
                 if (textState.inMini === true) {
                     var c = textState.text[textState.index++];
@@ -924,7 +947,8 @@
         textState.inMini = false;
     };
 
-    Sprite_Picture.prototype._startRubyText = function (textState) {
+    Sprite_Picture.prototype._startRubyText = function (textState,bitmap) {
+        bitmap.inRubyText = true;
         textState.inRubyText = true;
         textState.inRubyTextString = "";
     };
@@ -948,6 +972,7 @@
         bitmap.fontSize = originalFontSize;
         this._RubyTextDelete(textState);
         textState.inRubyText = false;
+        bitmap.inRubyText = false;
     };
 
     Sprite_Picture.prototype._processNewLine = function(textState, bitmap) {
@@ -958,10 +983,10 @@
         if (bitmap instanceof Bitmap)
             textState.x = (bitmap.width - this.textWidths[textState.line]) / 2 * this.dTextInfo.align;
             if (this.dTextInfo.isRuby) {
-                if (textState.left == 0) {
-                    textState.x += 32;//余白を広げたい場合はこの変数の値を目標値にする
+                if (this.dTextInfo.size >= 100) {
+                    textState.x += padempty;
                 } else {
-                    textState.x += 32;//余白を広げたい場合はこの変数の値を目標値にする
+                    textState.x += padempty_lite;
                 }
             }
     };
@@ -999,7 +1024,9 @@
         if (this.fontBoldFotDtext) {
             baseWidth += 2;
         }
-        this.width  = Math.max(x + baseWidth, this.width);
+        if (!this.inRubyText) {
+            this.width = Math.max(x + baseWidth, this.width);
+        }
         this.height = Math.max(y + fontSize + 8, this.height);
     };
 
