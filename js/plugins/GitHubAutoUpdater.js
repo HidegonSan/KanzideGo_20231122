@@ -75,6 +75,11 @@
 
     }
 
+    const delay = 100; // 0.1秒（100ミリ秒）
+
+    function delayAsync(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
     async function commiting() {
         var latestCommitSHA = await getLatestCommitSHA(owner, repo);
         if (lastCommitSHA === undefined || lastCommitSHA === null) {
@@ -113,6 +118,8 @@
                     }
                 }
 
+                await delayAsync(delay);
+
             }
 
             await Promise.all(downloadPromises);
@@ -134,7 +141,7 @@
                         $gameMap._interpreter.pluginCommand("D_TEXT", [`1秒後にシャットダウンします。`, "20"]);
                         $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
                         setTimeout(function () {
-                            window.close();
+                            //window.close();
                         }, 1000);
                     }, 1000);
                 }, 1000);
@@ -175,7 +182,7 @@
             $gameScreen.showPicture(55, null, 1, 640, 120, 100, 100, 255, 0);
         }
     }
-    function downloadFile(file, fileName) {
+    async function downloadFile(file, fileName) {
         const fileUrl = file.raw_url;
 
         return new Promise(async (resolve, reject) => {
