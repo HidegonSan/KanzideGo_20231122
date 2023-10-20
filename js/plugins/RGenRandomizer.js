@@ -85,7 +85,7 @@
         }
 
         const allNumbersInRange = Array.from({ length: b - a + 1 }, (_, index) => a + index);
-        const matchingNumbersInRange = matchingNumbers.map(item => parseInt(item.split('_')[1]));
+        const matchingNumbersInRange = matchingNumbers.map(item => parseInt(item.split('_').slice(-1)[0]));
         const availableNumbers = allNumbersInRange.filter(number => !matchingNumbersInRange.includes(number));
         if (availableNumbers.length === 0) {
             return generateRandomNumber(a, b);
