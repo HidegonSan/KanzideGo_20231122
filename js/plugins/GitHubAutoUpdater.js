@@ -13,32 +13,32 @@
  * @param Repo
  * @desc GitHubレポジトリの名前
  * @default your_repo
- * 
+ *
  * @param DPath
  * @desc ダウンロードする場所(基本は./でいいはずです)
  * @default ./
- * 
+ *
  * @param InitialSHA
  * @desc 最初期バージョンのSHA
  * @default initial_SHA
- * 
+ *
  * @param Judge
  * @desc 更新判定が終わったことを示すスイッチの番号。
  * @type number
  * @default 228
- * 
+ *
  * @param isUpdate
  * @desc 更新中であることを示すスイッチの番号。
  * @type number
  * @default 230
- * 
+ *
  * @param pictureName
  * @desc 最新バージョンであることを示すピクチャの名前
  * @default Party_Oa
- * 
+ *
  * @help
  * Githubのほうに更新があったとき、変更箇所をダウンロードして適切な場所に配置してくれるスクリプトですが、まだいろいろと問題点があります。
- * 
+ *
  */
 
 (function () {
@@ -132,13 +132,13 @@
             $gameMap._interpreter.pluginCommand("D_TEXT", [`処理完了`, "20"]);
             $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
             setTimeout(function () {
-                $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後にシャットダウンします。`, "20"]);
+                $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後にシャットダウンします。（閉じない場合はウィンドウの閉じるボタンを押してください）`, "20"]);
                 $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
                 setTimeout(function () {
-                    $gameMap._interpreter.pluginCommand("D_TEXT", [`2秒後にシャットダウンします。`, "20"]);
+                    $gameMap._interpreter.pluginCommand("D_TEXT", [`2秒後にシャットダウンします。（閉じない場合はウィンドウの閉じるボタンを押してください）`, "20"]);
                     $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
                     setTimeout(function () {
-                        $gameMap._interpreter.pluginCommand("D_TEXT", [`1秒後にシャットダウンします。`, "20"]);
+                        $gameMap._interpreter.pluginCommand("D_TEXT", [`1秒後にシャットダウンします。（閉じない場合はウィンドウの閉じるボタンを押してください）`, "20"]);
                         $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
                         setTimeout(function () {
                             //window.close();

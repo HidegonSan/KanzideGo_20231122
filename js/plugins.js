@@ -41,11 +41,12 @@ var $plugins =
 {"name":"Torigoya_RetryLoadPlus","status":false,"description":"ファイルの読み込み失敗時にリトライします","parameters":{"Retry Max":"10","Retry Message Text":"ファイルの読み込みに失敗しました。\\nネットワーク状況を確認して、リトライしてください。","Retry Button Text":"リトライする"}},
 {"name":"ThroughFailedToLoad","status":false,"description":"ロード失敗エラーのすり抜けプラグイン","parameters":{"テストプレー時無効":"true","Web版で無効":"false","無視種別":"3"}},
 {"name":"GetOriginalQuestion","status":true,"description":".csv形式の問題を読み込めます。","parameters":{}},
-{"name":"DRS_BoostEngineMV","status":true,"description":"ゲームスピードを動的に変更します。","parameters":{}},
 {"name":"SNZ_randomXorshiftOnline","status":false,"description":"ランダムに何かをする処理の精度を上げます　ブラウザプレイ対応","parameters":{}},
 {"name":"RGenRandomizer","status":true,"description":"ランダムな変数出力","parameters":{"exported_value":"6"}},
 {"name":"GetStageFromGitHub","status":true,"description":"GitHubから問題セットを持ってきて、ステージにしてくれます。すべき操作は以下の通りです。\r\n\r\nモード座標代入(コモンイベント219)、プラグインコマンド「StageSelect_Enter」、その10フレーム後でedit_startをオンにすることでモードに入れます。\r\n\r\nedit_startがオンの間、並列処理で「CustomStageParallel」を実行することで、操作が可能です。\r\n\r\n残機設定、カスタマイズ設定から戻るときにプラグインコマンド「StageSelect_ReturnFromConfig」を実行してください。\r\n\r\nステージに入っている間は設定難易度を1000にしています。\r\n\r\n問題ジェネレーターで、本来の処理の代わりにプラグインコマンド「Generator 2」を行うことで問題が代入されます。","parameters":{"extra_page":"1099","extra_sub_place":"1100","common_click":"1091","edit_tmp":"1090","edit_start":"200","edit_ok_switch":"199","font_edit":"游明朝"}},
-{"name":"QuestionImport","status":true,"description":"jsonで問題保存","parameters":{}},
+{"name":"QuestionImport","status":true,"description":"jsonで問題保存","parameters":{"Owner":"Formidi","Repo":"KanzideGo"}},
+{"name":"QuestionAdd","status":false,"description":"","parameters":{}},
 {"name":"GitHubAutoUpdater","status":true,"description":"Allows automatic updates from a GitHub repository.","parameters":{"Owner":"Formidi","Repo":"KanzideGo","DPath":"./www/","InitialSHA":"ba99dd16e844906d3492b8ca463a3fc5aa886978","Judge":"232","isUpdate":"230","pictureName":"Version_Latest"}},
+{"name":"DRS_BoostEngineMV","status":true,"description":"ゲームスピードを動的に変更します。","parameters":{}},
 {"name":"varIDforPlugin","status":true,"description":"【末尾に導入】\r\nプラグイン引数に変数の値を採用","parameters":{}}
 ];
