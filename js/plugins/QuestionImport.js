@@ -57,7 +57,8 @@
     Scene_Boot.prototype.start = function () {
         _Scene_Boot_start.call(this);
         const existingData = {};
-        if (navigator.onLine) {
+        if (navigator.onLine && !$gameTemp.isPlaytest()) {
+            console.log("GitHub取得");
             const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/excelData`;
             fetch(apiUrl)
                 .then(response => {
@@ -101,6 +102,7 @@
                 });
         }
         else {
+            console.log("ローカル取得");
             const fs = require('fs');
             const path = require('path');
             const directoryPath = './excelData';
@@ -159,7 +161,7 @@
                 if (key === "問題") {
                     datakey = value;
                     existing[datakey] = {}; // data_toaddオブジェクトを初期化
-                    existing[datakey]["6"] = datakey;
+                    existing[datakey]["8"] = datakey;
                 } else {
                     if (keyDictionary[key] != undefined && keyDictionary[key] !== null && keyDictionary[key] !== "") {
                         existing[datakey][keyDictionary[key]] = value;
@@ -171,6 +173,7 @@
 
     DataManager.saveCustomData = function (data) {
         localStorage.setItem('MainQuestionData', JSON.stringify(data));
+        console.log(data);
     };
     DataManager.loadCustomData = function () {
         try {
@@ -191,10 +194,24 @@
             console.log(list);
             var dict = list[args[0]];
             for (const [key, value] of Object.entries(dict)) {
-                $gameVariables.setValue(parseInt(key), value);
+                if (value != "000000000000000000000") {
+                    $gameVariables.setValue(parseInt(key), parseOrReturnOriginal(value));
+                } else {
+                    $gameVariables.setValue(parseInt(key), value);
+                }
             }
         }
     };
+
+    function parseOrReturnOriginal(inputString) {
+        const parsedInt = parseInt(inputString);
+
+        if (!isNaN(parsedInt)) {
+            return parsedInt;
+        } else {
+            return inputString;
+        }
+    }
 
     function formatToFourDigits(number) {
         var formatted_number = String(number).padStart(4, '0');
