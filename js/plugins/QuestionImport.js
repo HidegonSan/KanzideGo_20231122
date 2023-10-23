@@ -170,6 +170,7 @@
             }
         }
     }
+    /*
 
     DataManager.saveCustomData = function (data) {
         localStorage.setItem('MainQuestionData', JSON.stringify(data));
@@ -183,6 +184,15 @@
             console.error('Failed to load custom data:', error);
             return null;
         }
+    };
+    */
+
+    DataManager.saveCustomData = function (data) {
+        this._NormalQuestionData = data;
+    };
+
+    DataManager.loadCustomData = function () {
+        return this._NormalQuestionData || [];
     };
 
     var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
