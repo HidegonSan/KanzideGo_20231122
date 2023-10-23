@@ -57,6 +57,8 @@
     Scene_Boot.prototype.start = function () {
         _Scene_Boot_start.call(this);
         const existingData = {};
+        console.log(navigator.onLine);
+        console.log($gameTemp.isPlaytest());
         if (navigator.onLine && !$gameTemp.isPlaytest()) {
             console.log("GitHub取得");
             const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/excelData`;
@@ -105,7 +107,10 @@
             console.log("ローカル取得");
             const fs = require('fs');
             const path = require('path');
-            const directoryPath = './excelData';
+            var directoryPath = './www/excelData';
+            if ($gameTemp.isPlaytest()) {
+                directoryPath = './excelData';
+            }
             const promises = [];
 
             fs.readdir(directoryPath, (err, files) => {
@@ -201,7 +206,6 @@
 
         if (command === 'Qjson') {
             var list = DataManager.loadCustomData();
-            console.log(list);
             var dict = list[args[0]];
             for (const [key, value] of Object.entries(dict)) {
                 if (value != "000000000000000000000") {
