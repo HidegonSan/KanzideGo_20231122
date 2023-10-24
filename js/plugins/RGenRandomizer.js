@@ -43,11 +43,20 @@
             var min = parseInt(args[1]);
             var max = parseInt(args[2]);
             var probability = parseInt(args[3]);
+            if (args.length >= 5) {
+                var addedQuestion_num = parseInt(args[4]);
+                var addedQuestion_probability = parseInt(args[5]);
+            }
             var Customlist = DataManager.getCustomList();
             if (variableId && min && max && probability >= 0 && probability <= 100) {
                 var value = generateRandomNumber(min, max);
                 if (probability > Math.random() * 100) {
-                    value = getRandomNumberInIdentifierRangeNotInCustomlist(variableId, min, max, Customlist);
+                    value = getRandomNumberInIdentifierRangeNotInCustomlist(variableId, min, max, Customlist, 0);
+                }
+                if (args.length >= 5) {
+                    if (addedQuestion_probability > Math.random() * 100) {
+                        value = getRandomNumberInIdentifierRangeNotInCustomlist(variableId, min, max, Customlist, addedQuestion_num);
+                    }
                 }
                 DataManager.addToCustomList(`${variableId}_${value}`);
                 DataManager.SetCustomList(removeItemsWithSubstring(Customlist, variableId, max));
@@ -77,7 +86,11 @@
         return list;
     }
 
-    function getRandomNumberInIdentifierRangeNotInCustomlist(identifier, a, b, customlist) {
+    function getRandomNumberInIdentifierRangeNotInCustomlist(identifier, a, b, customlist, grad) {
+        var a_save = a;
+        if (grad >= 1) {
+            a = b - grad + 1;
+        }
         const matchingNumbers = customlist.filter(item => item.startsWith(identifier));
 
         if (matchingNumbers.length === 0) {
@@ -87,8 +100,8 @@
         const allNumbersInRange = Array.from({ length: b - a + 1 }, (_, index) => a + index);
         const matchingNumbersInRange = matchingNumbers.map(item => parseInt(item.split('_').slice(-1)[0]));
         const availableNumbers = allNumbersInRange.filter(number => !matchingNumbersInRange.includes(number));
-        if (availableNumbers.length === 0) {
-            return generateRandomNumber(a, b);
+        if (availableNumbers.length === 0 && grad >= 1) {
+            return getRandomNumberInIdentifierRangeNotInCustomlist(identifier, a_save, b, customlist, 0);
         }
 
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
