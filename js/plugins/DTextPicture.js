@@ -213,7 +213,7 @@
 (function() {
     'use strict';
 
-    var padempty = 200;
+    var padempty = 100;
     var padempty_lite = 32;
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
@@ -523,20 +523,11 @@
         var RubyOffset = 0;
         if ($gameScreen.isSettingDText() && !name) {
             this.isDTextPicture = true;
-            if($gameScreen.getDTextPictureInfo().size >= 100){
-                if (origin === 0) {
+            if (origin === 0) {
+                if ($gameScreen.getDTextPictureInfo().size >= 100) {
                     RubyOffset = padempty;
-
-                } else if (origin === 1) {
-                    RubyOffset = padempty / 2;
-                }
-            }else {
-
-                if (origin === 0) {
+                } else {
                     RubyOffset = padempty_lite;
-
-                } else if (origin === 1) {
-                    RubyOffset = padempty_lite / 2;
                 }
             }
             arguments[0] = Date.now().toString();
@@ -549,6 +540,7 @@
         } else {
             this.dTextInfo = null;
         }
+
         _Game_Picture_show.apply(this, arguments);
     };
 
@@ -556,20 +548,11 @@
     Game_Picture.prototype.move = function (origin, x, y, scaleX, scaleY, opacity, blendMode, duration) {
         var RubyOffset = 0;
         if (this.isDTextPicture) {
-            if ($gameScreen.getDTextPictureInfo().size >= 100) {
-                if (origin === 0) {
+            if (origin === 0) {
+                if (this.dTextInfo.size >= 100) {
                     RubyOffset = padempty;
-
-                } else if (origin === 1) {
-                    RubyOffset = padempty / 2;
-                }
-            } else {
-
-                if (origin === 0) {
+                } else {
                     RubyOffset = padempty_lite;
-
-                } else if (origin === 1) {
-                    RubyOffset = padempty_lite / 2;
                 }
             }
             if (this.dTextInfo.isRuby) {
@@ -772,7 +755,11 @@
         var bitmapVirtual = new Bitmap_Virtual();
         this._processText(bitmapVirtual);
         this.hiddenWindow.resetFontSettings(this.dTextInfo);
-        this.bitmap = new Bitmap(bitmapVirtual.width, bitmapVirtual.height);
+        var pad = padempty_lite;
+        if (this.dTextInfo.size >= 100) {
+            pad = padempty;
+        }
+        this.bitmap = new Bitmap(bitmapVirtual.width + pad, bitmapVirtual.height + pad);
         this.applyTextDecoration();
         this.bitmap.fontFace = this.hiddenWindow.contents.fontFace;
         if (this.dTextInfo.color) {
