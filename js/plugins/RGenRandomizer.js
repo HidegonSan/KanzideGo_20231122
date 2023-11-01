@@ -79,7 +79,7 @@
             } else if (parseInt($gameVariables.value(15)) <= 500) {
                 tag = `Ca_${String(parseInt($gameVariables.value(15)) - 100).padStart(3, '0')}`;
             } else if (parseInt($gameVariables.value(15)) <= 600) {
-                tag = "Ru";
+                tag = "Ma";
             }
             if (parseInt($gameVariables.value(15)) != 101) {
                 tag = `${tag}_Lv${parseInt($gameVariables.value(8).split('_')[0].match(/\d+/))}`;
