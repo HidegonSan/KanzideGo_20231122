@@ -85,22 +85,14 @@
 
                     // 各.txtファイルの内容を取得しコンソールに表示
                     const filePromises = txtFiles.map(async (file) => {
-                        try {
-                            const folderUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`;
-                            const fileResponse = await fetch(folderUrl);
+                        const folderUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`;
+                        const fileResponse = await fetch(folderUrl);
 
-                            if (fileResponse.ok) {
-                                const data = await fileResponse.text();
-                                if (path.extname(file.path) === ".txt") {
-                                    AddData(existingData, data);
-                                } else if (path.extname(file.path) === ".csv") {
-                                    AddCsvData(existingExData, data, path.basename(file.path));
-                                }
-                            } else {
-                                console.error(`Failed to fetch file: ${folderUrl}`);
-                            }
-                        } catch (error) {
-                            console.error(`Error: ${error}`);
+                        if (fileResponse.ok) {
+                            const data = await fileResponse.text();
+                            AddData(existingData, data);
+                        } else {
+                            console.error(`Failed to fetch file: ${folderUrl}`);
                         }
                     });
 
