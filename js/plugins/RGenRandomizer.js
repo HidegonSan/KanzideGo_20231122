@@ -9,12 +9,12 @@
  * @param exported_value
  * @desc プラグインコマンド実行時に出力される変数のID。
  * @type number
- * @default 1090
+ * @default 6
  */
 //=============================================================================
 (function () {
     var parameters = PluginManager.parameters('RGenRandomizer');
-    var exported_value = Number(parameters['exported_value'] || 1090);
+    var exported_value = Number(parameters['exported_value'] || 6);
 
     DataManager.initCustomList = function () {
         this._customList = [];
@@ -31,6 +31,11 @@
     DataManager.getCustomList = function () {
         return this._customList || [];
     };
+
+    function GetCustomStageQuestion(stage_name) {
+        const filteredArray = this._CustomStageArray.filter(item => item.dataName === stage_name);
+        return filteredArray[0]["Question"] || null;
+    }
 
     var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = function (command, args) {
@@ -58,12 +63,78 @@
                         value = getRandomNumberInIdentifierRangeNotInCustomlist(variableId, min, max, Customlist, addedQuestion_num);
                     }
                 }
-                DataManager.addToCustomList(`${variableId}_${value}`);
-                DataManager.SetCustomList(removeItemsWithSubstring(Customlist, variableId, max));
                 $gameVariables.setValue(exported_value, value);
             }
         }
+        else if (command === 'RGen_Record') {
+            var Customlist = DataManager.getCustomList();
+            if (!DataManager._customList) {
+                DataManager.initCustomList();
+            }
+            var tag = "";
+            if (parseInt($gameVariables.value(15)) <= 100) {
+                tag = "Ma";
+            } else if (parseInt($gameVariables.value(15)) == 101) {
+                tag = `Ca_${String(parseInt($gameVariables.value(15)) - 100).padStart(3, '0')}`;
+            } else if (parseInt($gameVariables.value(15)) <= 500) {
+                tag = `Ca_${String(parseInt($gameVariables.value(15)) - 100).padStart(3, '0')}`;
+            } else if (parseInt($gameVariables.value(15)) <= 600) {
+                tag = "Ru";
+            }
+            if (parseInt($gameVariables.value(15)) != 101) {
+                tag = `${tag}_Lv${parseInt($gameVariables.value(8).split('_')[0].match(/\d+/))}`;
+            }
+            DataManager.addToCustomList(`${tag}_${$gameVariables.value(6)}`);
+            DataManager.SetCustomList(removeItemsWithSubstring(Customlist, tag, parseInt($gameVariables.value(681))));
+        }
+        else if (command === 'RGen_reset') {
+            DataManager.SetCustomList(removeItemsForceWithSubstring(DataManager.getCustomList(), args[0]));
+        }
+        else if (command === 'EXRGen') {
+            if (!DataManager._customList) {
+                DataManager.initCustomList();
+            }
+            var stageName = args[0];
+            var probability = parseInt(args[1]);
+            var level = parseInt(args[2]);
+            var Customlist = DataManager.getCustomList();
+            if (stageName && probability >= 0 && probability <= 100) {
+                var isFilter = false;
+                if (probability > Math.random() * 100) {
+                    isFilter = true;
+                }
+                var value = getExRandomNumber(stageName, Customlist, level, isFilter);
+                //DataManager.addToCustomList(value);
+                //$gameVariables.setValue(exported_value, parseInt(value.slice(value.lastIndexOf('_') + 1)));
+            }
+        }
+        else if (command === 'EditRGen') {
+            if (!DataManager._customList) {
+                DataManager.initCustomList();
+            }
+            var stageName = args[0];
+            var probability = parseInt(args[1]);
+            var level = parseInt(args[2]);
+            var Customlist = DataManager.getCustomList();
+            if (stageName && probability >= 0 && probability <= 100) {
+                var isFilter = false;
+                if (probability > Math.random() * 100) {
+                    isFilter = true;
+                }
+                var value = getEditRandomNumber(stageName, Customlist, level, isFilter);
+                //DataManager.addToCustomList(value);
+                //$gameVariables.setValue(exported_value, parseInt(value.slice(value.lastIndexOf('_') + 1)));
+            }
+        }
     };
+
+    function removeItemsForceWithSubstring(list, substring) {
+        list = list.filter(function (currentItem) {
+            return !currentItem.includes(substring);
+        });
+
+        return list;
+    }
 
     function generateRandomNumber(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -102,10 +173,40 @@
         const availableNumbers = allNumbersInRange.filter(number => !matchingNumbersInRange.includes(number));
         if (availableNumbers.length === 0 && grad >= 1) {
             return getRandomNumberInIdentifierRangeNotInCustomlist(identifier, a_save, b, customlist, 0);
+        } else if (availableNumbers.length === 0) {
+            return generateRandomNumber(a, b);
         }
-
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
         return availableNumbers[randomIndex];
+    }
+    function getExRandomNumber(stageName, Customlist, level, doFilter) {
+        const ex_dict = DataManager.loadCustomExData();
+        const indexesToInclude = [];
+        for (const key in ex_dict) {
+            if (key.includes(stageName) && level == parseInt(ex_dict[key]["Level"]) && (!doFilter || !Customlist.includes(key))) {
+                indexesToInclude.push(key);
+            }
+        }
+        if (indexesToInclude.length == 0) {
+            DataManager.SetCustomList(removeItemsForceWithSubstring(Customlist, stageName));
+        }
+        const randomIndex = Math.floor(Math.random() * indexesToInclude.length);
+        return indexesToInclude[randomIndex];
+    }
+
+    function getEditRandomNumber(stageName, Customlist, level, doFilter) {
+        const ex_dict = GetCustomStageQuestion(stageName);
+        const indexesToInclude = [];
+        for (const key in ex_dict) {
+            if (key.includes(stageName) && level == parseInt(ex_dict[key]["Level"]) && (!doFilter || !Customlist.includes(key))) {
+                indexesToInclude.push(key);
+            }
+        }
+        if (indexesToInclude.length == 0) {
+            DataManager.SetCustomList(removeItemsForceWithSubstring(Customlist, stageName));
+        }
+        const randomIndex = Math.floor(Math.random() * indexesToInclude.length);
+        return indexesToInclude[randomIndex];
     }
 
 })();

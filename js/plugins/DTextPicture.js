@@ -213,8 +213,8 @@
 (function() {
     'use strict';
 
-    var padempty = 100;
-    var padempty_lite = 32;
+    var padempty = 200;
+    var padempty_lite = 30;
     var getCommandName = function(command) {
         return (command || '').toUpperCase();
     };
@@ -823,7 +823,7 @@
         }
     };
 
-    Sprite_Picture.prototype._processCharacter = function(textState, bitmap) {
+    Sprite_Picture.prototype._processCharacter = function (textState, bitmap) {
         if (textState.text[textState.index] === '\x1b') {
             var code = this.hiddenWindow.obtainEscapeCode(textState);
             switch (code) {
@@ -885,31 +885,63 @@
         } else if (textState.text[textState.index] === ']') {
             this._endMiniText(textState, bitmap);
             var c = textState.text[textState.index++];
+        } else if (textState.text[textState.index] === '₨') {
+            var c = textState.text[textState.index++];
+        } else if (textState.text[textState.index] === '㊦') {
+            if (textState.inUnder === true) {
+                this._endUnderText(textState, bitmap);
+            } else {
+                this._startUnderText(textState, bitmap);
+            }
+            var c = textState.text[textState.index++];
         } else {
             if (textState.inRubyText === true) {
                 var c = textState.text[textState.index++];
                 this._RubyTextAdd(textState, c);
-            } else {
-                if (textState.inMini === true) {
-                    var c = textState.text[textState.index++];
-                    var w = Math.floor(this.hiddenWindow.textWidth(c) * 3 / 4);
-                    var newFontSize = Math.floor(this.hiddenWindow.contents.fontSize * 3 / 4);
-                    bitmap.fontSize = newFontSize;
-                    bitmap.drawText(c, textState.x, textState.y + newFontSize / 8, w * 2, textState.height, 'left');
-                    textState.x += w;
+            }
+            else if (textState.inMini === true) {
+                var c = textState.text[textState.index++];
+                var w = Math.floor(this.hiddenWindow.textWidth(c) * 3 / 4);
+                var newFontSize = Math.floor(this.hiddenWindow.contents.fontSize * 3 / 4);
+                bitmap.fontSize = newFontSize;
+                bitmap.drawText(c, textState.x, textState.y + newFontSize / 8, w * 2, textState.height, 'left');
+                textState.x += w;
 
-                } else {
-                    var c = textState.text[textState.index++];
-                    var w = this.hiddenWindow.textWidth(c);
-                    bitmap.fontSize = this.hiddenWindow.contents.fontSize;
-                    bitmap.drawText(c, textState.x, textState.y, w * 2, textState.height, 'left');
-                    textState.x += w;
-                    if (textState.inRuby === true) {
-                        textState.RubyCount += 1;
-                    }
-
+            }
+            else if (textState.inUnder === true) {
+                var c = textState.text[textState.index++];
+                this._UnderTextAdd(textState, c);
+            }
+            else {
+                var c = textState.text[textState.index++];
+                var w = this.hiddenWindow.textWidth(c);
+                bitmap.fontSize = this.hiddenWindow.contents.fontSize;
+                bitmap.drawText(c, textState.x, textState.y, w * 2, textState.height, 'left');
+                textState.x += w;
+                if (textState.inRuby === true) {
+                    textState.RubyCount += 1;
                 }
             }
+        }
+    };
+    Sprite_Picture.prototype._startUnderText = function (textState, bitmap) {
+        textState.inUnder = true;
+        textState.inUnderTextString = "";
+    };
+
+    Sprite_Picture.prototype._UnderTextAdd = function (textState, textToAdd) {
+        textState.inUnderTextString += textToAdd;
+    };
+
+    Sprite_Picture.prototype._endUnderText = function (textState, bitmap) {
+        if (bitmap.textColor) {
+            var w = this.hiddenWindow.textWidth(textState.inUnderTextString);
+            var originalFontSize = bitmap.fontSize;
+            bitmap.fontSize = originalFontSize / 2.6;
+            var font_mini = originalFontSize / 5.2;
+            bitmap.drawText(textState.inUnderTextString, bitmap.width / 2 - textState.inUnderTextString.length * font_mini, textState.y + originalFontSize, w * 2, textState.height, 'left');
+            bitmap.fontSize = originalFontSize;
+            textState.inUnder = false;
         }
     };
 
