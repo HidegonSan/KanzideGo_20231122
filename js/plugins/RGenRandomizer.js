@@ -74,8 +74,6 @@
             var tag = "";
             if (parseInt($gameVariables.value(15)) <= 100) {
                 tag = "Ma";
-            } else if (parseInt($gameVariables.value(15)) == 101) {
-                tag = `Ca_${String(parseInt($gameVariables.value(15)) - 100).padStart(3, '0')}`;
             } else if (parseInt($gameVariables.value(15)) <= 500) {
                 tag = `Ca_${String(parseInt($gameVariables.value(15)) - 100).padStart(3, '0')}`;
             } else if (parseInt($gameVariables.value(15)) <= 600) {
@@ -173,7 +171,8 @@
         const availableNumbers = allNumbersInRange.filter(number => !matchingNumbersInRange.includes(number));
         if (availableNumbers.length === 0 && grad >= 1) {
             return getRandomNumberInIdentifierRangeNotInCustomlist(identifier, a_save, b, customlist, 0);
-        } else if (availableNumbers.length === 0) {
+        } else if (availableNumbers.length <= 25) {
+            removeItemsForceWithSubstring(customlist, identifier);
             return generateRandomNumber(a, b);
         }
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
