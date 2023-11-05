@@ -53,8 +53,9 @@
 
     const fs = require('fs');
     const path = require('path');
+    const util = require('util');
 
-    var lastCommitSHA = localStorage.getItem('lastCommitSHA');
+    const readFileAsync = util.promisify(fs.readFile);
 
     var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = async function (command, args) {
@@ -69,10 +70,8 @@
     }
     async function ResetRepo() {
         console.log("コミットのリセットを開始します");
-        lastCommitSHA = initialSHA;
-        localStorage.setItem('lastCommitSHA', lastCommitSHA);
+        fs.writeFileSync(filePath, initialSHA);
         console.log("コミットがリセットされました。");
-
     }
 
     const delay = 100; // 0.1秒（100ミリ秒）
@@ -82,10 +81,12 @@
     }
     async function commiting() {
         var latestCommitSHA = await getLatestCommitSHA(owner, repo);
-        if (lastCommitSHA === undefined || lastCommitSHA === null) {
-            lastCommitSHA = initialSHA;
+        var filePath = './www/data/commitSHA.txt';
+        if ($gameTemp.isPlaytest()) {
+            filePath = './data/commitSHA.txt';
         }
-        if (lastCommitSHA !== latestCommitSHA) {
+        var lastCommitSHA = await getLastCommitSHA(filePath);
+        if (lastCommitSHA !== latestCommitSHA && !Utils.isOptionValid('test')) {
             $gameSwitches.setValue(isUpdate, true);
             $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新:${lastCommitSHA}→${latestCommitSHA}`, "20"]);
             $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
@@ -125,8 +126,7 @@
             await Promise.all(downloadPromises);
 
             lastCommitSHA = latestCommitSHA;
-            localStorage.setItem('lastCommitSHA', lastCommitSHA);
-
+            fs.writeFileSync(filePath, latestCommitSHA);
             $gameSwitches.setValue(isUpdate, false);
 
             $gameMap._interpreter.pluginCommand("D_TEXT", [`処理完了`, "20"]);
@@ -165,6 +165,15 @@
             }
         } catch (error) {
             throw new Error(`GitHub APIからのコミットSHAの取得中にエラーが発生しました: ${error.message}`);
+        }
+    }
+
+    async function getLastCommitSHA(filePath) {
+        try {
+            const fileData = await readFileAsync(filePath, 'utf8');
+            return fileData;
+        } catch (err) {
+            return initialSHA;
         }
     }
 
