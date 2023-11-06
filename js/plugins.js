@@ -38,19 +38,18 @@ var $plugins =
 {"name":"MPI_AutoWaitForPicture","status":true,"description":"ピクチャの表示実行時、画像読み込み完了まで自動でウェイトする機能を提供します。","parameters":{"ピクチャの表示自動ウェイト切替スイッチ":"60"}},
 {"name":"StringSearchReplace","status":true,"description":"","parameters":{}},
 {"name":"Torigoya_RetryLoadPlus","status":false,"description":"ファイルの読み込み失敗時にリトライします","parameters":{"Retry Max":"10","Retry Message Text":"ファイルの読み込みに失敗しました。\\nネットワーク状況を確認して、リトライしてください。","Retry Button Text":"リトライする"}},
-{"name":"GetOriginalQuestion","status":true,"description":".csv形式の問題を読み込めます。","parameters":{}},
 {"name":"SNZ_randomXorshiftOnline","status":false,"description":"ランダムに何かをする処理の精度を上げます　ブラウザプレイ対応","parameters":{}},
 {"name":"RGenRandomizer","status":true,"description":"ランダムな変数出力","parameters":{"exported_value":"6"}},
 {"name":"GetStageFromGitHub","status":true,"description":"GitHubから問題セットを持ってきて、ステージにしてくれます。すべき操作は以下の通りです。\r\n\r\nモード座標代入(コモンイベント219)、プラグインコマンド「StageSelect_Enter」、その10フレーム後でedit_startをオンにすることでモードに入れます。\r\n\r\nedit_startがオンの間、並列処理で「CustomStageParallel」を実行することで、操作が可能です。\r\n\r\n残機設定、カスタマイズ設定から戻るときにプラグインコマンド「StageSelect_ReturnFromConfig」を実行してください。\r\n\r\nステージに入っている間は設定難易度を1000にしています。\r\n\r\n問題ジェネレーターで、本来の処理の代わりにプラグインコマンド「Generator 2」を行うことで問題が代入されます。","parameters":{"extra_page":"1099","extra_sub_place":"1100","common_click":"1091","edit_tmp":"1090","edit_start":"200","edit_ok_switch":"199","font_edit":"游明朝"}},
-{"name":"QuestionAdd","status":false,"description":"","parameters":{}},
 {"name":"CognitiveOpenedRuby","status":true,"description":"","parameters":{}},
 {"name":"QuestionImport","status":true,"description":"jsonで問題保存","parameters":{"Owner":"Formidi","Repo":"KanzideGo","IsLocal":"0"}},
 {"name":"GitHubAutoUpdater","status":true,"description":"Allows automatic updates from a GitHub repository.","parameters":{"Owner":"Formidi","Repo":"KanzideGo","DPath":"./www/","InitialSHA":"ba99dd16e844906d3492b8ca463a3fc5aa886978","Judge":"232","isUpdate":"230","pictureName":"Version_Latest"}},
-{"name":"DRS_BoostEngineMV","status":true,"description":"ゲームスピードを動的に変更します。","parameters":{}},
 {"name":"ApplicationPictureRename","status":true,"description":"区切りのピクチャ名をスマホプレイ時に置換します","parameters":{"RenameStrings":"Cust_SelectA,Gameover_Select_A1,Gameover_Select_A2,Howto_Select_A1,Howto_Select_A2,Select_Ctrl_A,Select_Ctrl_B,Select_Ctrl_C,Select_Ctrl_D,Select_D,Select_D_b,Select_D_c,Select_Down_A,Select_Down_B,Select_Shift_A,Select_Shift_B,Select_Shift_C,Select_Shift_D,Select_Shift_E,Select_Shift_F,Select_Shift_G,Select_Space_A,Select_Space_B,Select_Space_C,Select_Space_D,Select_Space_E,Select_Space_F,Select_Space_G,Select_Space_H,Select_Space_I,Select_U,Select_U_a,Select_U_b,Select_U2,Select_Up_A,Select_Up_B,Select_Up_C,Update_SelectA,Update_SelectB,Window_Text_N,Window_Text_Y,Miss_Mes_A,Window_length_bg"}},
 {"name":"varIDforPlugin","status":true,"description":"【末尾に導入】\r\nプラグイン引数に変数の値を採用","parameters":{}},
 {"name":"Torigoya_FixMuteAudio","status":false,"description":"スマホでブラウザを非アクティブにすると音が二度と鳴らなくなることがあるのを防止するやつ","parameters":{}},
 {"name":"ThroughFailedToLoad","status":false,"description":"ロード失敗エラーのすり抜けプラグイン","parameters":{"テストプレー時無効":"true","Web版で無効":"false","無視種別":"3"}},
 {"name":"FixImageLoading","status":false,"description":"画像ロード時のチラつき防止プラグイン","parameters":{}},
-{"name":"UR65_SmartPhoneUI","status":false,"description":"スマホ用UI  ver 1.0.0\nUIのサイズをスマートフォン向けに最適化します。","parameters":{"タイトル":"0","メニュー":"0","アイテム":"0","スキル":"0","装備":"0","オプション":"1","ゲーム終了":"0","戦闘":"0","ショップ":"0","イベント関係":"1","アイコン位置修正":"0"}}
+{"name":"UR65_SmartPhoneUI","status":false,"description":"スマホ用UI  ver 1.0.0\nUIのサイズをスマートフォン向けに最適化します。","parameters":{"タイトル":"0","メニュー":"0","アイテム":"0","スキル":"0","装備":"0","オプション":"1","ゲーム終了":"0","戦闘":"0","ショップ":"0","イベント関係":"1","アイコン位置修正":"0"}},
+{"name":"--------------------------------","status":false,"description":"--------------------------------","parameters":{}},
+{"name":"DRS_BoostEngineMV","status":false,"description":"ゲームスピードを動的に変更します。","parameters":{}}
 ];
