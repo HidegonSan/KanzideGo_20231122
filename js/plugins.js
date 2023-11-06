@@ -51,5 +51,5 @@ var $plugins =
 {"name":"FixImageLoading","status":false,"description":"画像ロード時のチラつき防止プラグイン","parameters":{}},
 {"name":"UR65_SmartPhoneUI","status":false,"description":"スマホ用UI  ver 1.0.0\nUIのサイズをスマートフォン向けに最適化します。","parameters":{"タイトル":"0","メニュー":"0","アイテム":"0","スキル":"0","装備":"0","オプション":"1","ゲーム終了":"0","戦闘":"0","ショップ":"0","イベント関係":"1","アイコン位置修正":"0"}},
 {"name":"--------------------------------","status":false,"description":"--------------------------------","parameters":{}},
-{"name":"DRS_BoostEngineMV","status":false,"description":"ゲームスピードを動的に変更します。","parameters":{}}
+{"name":"DRS_BoostEngineMV","status":true,"description":"ゲームスピードを動的に変更します。","parameters":{}}
 ];
