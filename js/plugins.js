@@ -33,7 +33,7 @@ var $plugins =
 {"name":"EasingPicture","status":true,"description":"ピクチャーの移動パターンを増やします。","parameters":{}},
 {"name":"LoadingExtend","status":true,"description":"ロード中画像拡張プラグイン","parameters":{"イメージ列数":"2","イメージ行数":"2","表示タイプ":"1","セル指定変数":"1","アニメーション間隔":"30","表示位置X座標":"","表示位置Y座標":"","待機フレーム数":"60","点滅なし":"OFF"}},
 {"name":"PictureVariableSetting","status":true,"description":"ピクチャ関連のイベント機能拡張プラグイン","parameters":{"初期値":"OFF","ピクチャ表示最大数":"180"}},
-{"name":"GraphicsRenderFix","status":true,"description":"放置していると画面がフリーズするのを修正","parameters":{}},
+{"name":"GraphicsRenderFix","status":false,"description":"放置していると画面がフリーズするのを修正","parameters":{}},
 {"name":"SNZ_randomXorshiftOnline","status":false,"description":"ランダムに何かをする処理の精度を上げます　ブラウザプレイ対応","parameters":{}},
 {"name":"MPI_AutoWaitForPicture","status":true,"description":"ピクチャの表示実行時、画像読み込み完了まで自動でウェイトする機能を提供します。","parameters":{"ピクチャの表示自動ウェイト切替スイッチ":"60"}},
 {"name":"StringSearchReplace","status":true,"description":"","parameters":{}},

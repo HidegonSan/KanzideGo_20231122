@@ -1,5 +1,5 @@
 {
-    "name": "",
+    "name": "kanzidego",
     "main": "index.html",
     "js-flags": "--expose-gc",
     "window": {
