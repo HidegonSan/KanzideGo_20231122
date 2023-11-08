@@ -51,24 +51,23 @@
     var isUpdate = Number(parameters['isUpdate'] || 230);
     var pictureName = parameters['pictureName'] || 'Party_Oa';
 
-    const fs = require('fs');
-    const path = require('path');
-    const util = require('util');
-
-    const readFileAsync = util.promisify(fs.readFile);
-
     var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
     Game_Interpreter.prototype.pluginCommand = async function (command, args) {
         _Game_Interpreter_pluginCommand.call(this, command, args);
         if (command === 'DoUpdate') {
             if (navigator.onLine && !Utils.isOptionValid('test')) {
-                commiting();
+                try {
+                    commiting();
+                } catch (e) {
+                    console.log("アップデート可能な環境ではないためキャンセルされました");
+                }
             } else if (Utils.isOptionValid('test')){
                 ResetRepo();
             }
         }
     }
     async function ResetRepo() {
+        const fs = require('fs');
         console.log("コミットのリセットを開始します");
         fs.writeFileSync(filePath, initialSHA);
         console.log("コミットがリセットされました。");
@@ -80,96 +79,127 @@
         return new Promise(resolve => setTimeout(resolve, ms));
     }
     async function commiting() {
-        var latestCommitSHA = await getLatestCommitSHA(owner, repo);
-        var filePath = './www/data/commitSHA.txt';
-        if ($gameTemp.isPlaytest()) {
-            filePath = './data/commitSHA.txt';
-        }
-        var lastCommitSHA = await getLastCommitSHA(filePath);
-        if (lastCommitSHA !== latestCommitSHA && !Utils.isOptionValid('test')) {
+        const fs = require('fs');
+        const path = require('path');
+
+        //最新のコミットを取得する
+        const latestCommitSHA = await getLatestCommitSHA(owner, repo);
+
+        //直近のSHAのプロジェクトファイル内から取得する
+        const SHAfilePath = './www/data/commitSHA.txt';
+        const lastCommitSHA = await getLastCommitSHA(SHAfilePath);
+
+        //最後の更新と保存されている更新が異なる場合は更新処理に入る
+        if (lastCommitSHA !== latestCommitSHA) {
+            //アップデート中スイッチのオン
             $gameSwitches.setValue(isUpdate, true);
+
+            //バージョン更新の通知
             $gameMap._interpreter.pluginCommand("D_TEXT", [`バージョン更新:${lastCommitSHA}→${latestCommitSHA}`, "20"]);
             $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
+
+            //コミット間の違いを検知
             const commitChanges = await getCommitChanges(owner, repo, lastCommitSHA, latestCommitSHA);
+
+            //ダウンロード一覧を保存するリスト
             const downloadPromises = [];
+
+            //進捗を管理する整数
             var progress = 0;
+
+            //変更があったすべてのファイルに対して処理を行う
             for (const file of commitChanges) {
                 const fileName = path.join(downloadPath, file.filename);
 
-                if (file.status === 'removed') {
-                    if (fs.existsSync(fileName)) {
-                        fs.unlinkSync(fileName);
-                        $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}を消去しました。`, "20"]);
-                        $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
-                    }
-                } else {
-                    if (!fs.existsSync(fileName) || fs.readFileSync(fileName, 'utf8') !== file.content) {
-                        const downloadPromise = downloadFile(file, fileName)
-                            .then(() => {
-                                $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
-                                progress += 1;
-                                $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
-                                $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "20"]);
-                                $gameScreen.showPicture(57, null, 0, 10, 35, 100, 100, 255, 0);
-                            })
-                            .catch(error => {
-                                console.error(`Error: ${error.message}`);
-                            });
-                        downloadPromises.push(downloadPromise);
-                    }
+                if (file.status === 'removed' && fs.existsSync(fileName)) {
+                    //ファイルが消されているならローカルのファイルも消す
+                    fs.unlinkSync(fileName);
+
+                    //ファイルを消したことの通知
+                    $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}を消去しました。`, "20"]);
+                    $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
+                } else if (!fs.existsSync(fileName) || fs.readFileSync(fileName, 'utf8') !== file.content) {
+                    //ファイルに変更がかかっていたならローカルにファイルをダウンロードしてくる
+                    const downloadPromise = downloadFile(file, fileName)
+                        .then(() => {
+                            //ダウンロードが完了したときに表示を更新
+                            progress += 1;
+                            $gameMap._interpreter.pluginCommand("D_TEXT", [`${fileName}をダウンロードしました`, "20"]);
+                            $gameScreen.showPicture(56, null, 0, 300, 35, 100, 100, 255, 0);
+                            $gameMap._interpreter.pluginCommand("D_TEXT", [`ダウンロード中... ${progress} / ${commitChanges.length}`, "20"]);
+                            $gameScreen.showPicture(57, null, 0, 10, 35, 100, 100, 255, 0);
+                        })
+                        .catch(error => {
+                            console.error(`Error: ${error.message}`);
+                        });
+                    //ダウンロード中のファイル一覧に現在のファイルを追加
+                    downloadPromises.push(downloadPromise);
                 }
 
                 await delayAsync(delay);
-
+                //連続で実行すると負荷がかかるため0.1秒の間を開ける
             }
 
+            //すべてのダウンロードが終わるまで待機
             await Promise.all(downloadPromises);
 
-            lastCommitSHA = latestCommitSHA;
-            fs.writeFileSync(filePath, latestCommitSHA);
+            //新しいSHAを書き込む
+            fs.writeFileSync(SHAfilePath, latestCommitSHA);
             $gameSwitches.setValue(isUpdate, false);
 
+            //処理が終わったことを伝え、3秒後にシャットダウン
             $gameMap._interpreter.pluginCommand("D_TEXT", [`処理完了`, "20"]);
             $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
-            setTimeout(function () {
-                $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後にシャットダウンします。`, "20"]);
-                $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
-                setTimeout(function () {
-                    $gameMap._interpreter.pluginCommand("D_TEXT", [`2秒後にシャットダウンします。`, "20"]);
-                    $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
-                    setTimeout(function () {
-                        $gameMap._interpreter.pluginCommand("D_TEXT", [`1秒後にシャットダウンします。`, "20"]);
-                        $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
-                        setTimeout(function () {
-                            window.close();
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
-            }, 1000);
+            performShutdownSequence();
         } else {
             $gameSwitches.setValue(Judge, true);
             $gameScreen.showPicture(55, pictureName, 0, 0, 0, 100, 100, 255, 0);
         }
     }
 
-    async function getLatestCommitSHA(owner, repo) {
-        try {
-            const url = `https://api.github.com/repos/${owner}/${repo}/commits/main`;
-            const response = await fetch(url);
+    async function shutdownAfterDelay(delayMs) {
+        return new Promise(resolve => {
+            setTimeout(resolve, delayMs);
+        });
+    }
 
-            if (response.ok) {
-                const data = await response.json();
-                return data.sha;
-            } else {
-                throw new Error(`GitHub APIからのコミットSHAの取得中にエラーが発生しました: ${response.statusText}`);
-            }
-        } catch (error) {
-            throw new Error(`GitHub APIからのコミットSHAの取得中にエラーが発生しました: ${error.message}`);
+    async function performShutdownSequence() {
+        const one_second = 1000;
+
+        await shutdownAfterDelay(one_second);
+
+        $gameMap._interpreter.pluginCommand("D_TEXT", [`3秒後にシャットダウンします。`, "20"]);
+        $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
+        await shutdownAfterDelay(one_second);
+
+        $gameMap._interpreter.pluginCommand("D_TEXT", [`2秒後にシャットダウンします。`, "20"]);
+        $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
+        await shutdownAfterDelay(one_second);
+
+        $gameMap._interpreter.pluginCommand("D_TEXT", [`1秒後にシャットダウンします。`, "20"]);
+        $gameScreen.showPicture(55, null, 0, 10, 10, 100, 100, 255, 0);
+        await shutdownAfterDelay(one_second);
+
+        window.close();
+    }
+
+    //最新のコミットを取得
+    async function getLatestCommitSHA(owner, repo) {
+        const url = `https://api.github.com/repos/${owner}/${repo}/commits/main`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            return Promise.reject(`GitHub APIからのコミットSHAの取得中にエラーが発生しました: ${response.statusText}`);
         }
+
+        const data = await response.json();
+        return data.sha;
     }
 
     async function getLastCommitSHA(filePath) {
         try {
+            const util = require('util');
+            const readFileAsync = util.promisify(fs.readFile);
             const fileData = await readFileAsync(filePath, 'utf8');
             return fileData;
         } catch (err) {
@@ -178,22 +208,20 @@
     }
 
     async function getCommitChanges(owner, repo, fromSHA, toSHA) {
-        try {
-            const url = `https://api.github.com/repos/${owner}/${repo}/compare/${fromSHA}...${toSHA}`;
-            const response = await fetch(url);
+        const url = `https://api.github.com/repos/${owner}/${repo}/compare/${fromSHA}...${toSHA}`;
+        const response = await fetch(url);
 
-            if (response.ok) {
-                const data = await response.json();
-                return data.files;
-            }
-        } catch (error) {
-            $gameMap._interpreter.pluginCommand("D_TEXT", [`コミットエラー！報告をお願いします`, "40"]);
-            $gameScreen.showPicture(55, null, 1, 640, 120, 100, 100, 255, 0);
+        if (!response.ok) {
+            return Promise.reject(`GitHub APIからのデータ取得中にエラーが発生しました: ${response.statusText}`);
         }
+
+        const data = await response.json();
+        return data.files;
     }
     async function downloadFile(file, fileName) {
         const fileUrl = file.raw_url;
-
+        const fs = require('fs');
+        const path = require('path');
         return new Promise(async (resolve, reject) => {
             try {
                 const response = await fetch(fileUrl);
@@ -205,7 +233,6 @@
                 const fileContent = await response.arrayBuffer();
                 createDirectoryRecursive(path.dirname(fileName.replace(/\\/g, '/')));
                 fs.writeFileSync(fileName, Buffer.from(fileContent), 'binary');
-                console.log('ダウンロード: ' + file.filename);
                 resolve();
             } catch (error) {
                 reject(new Error(`ファイルのダウンロード中にエラーが発生しました: ${error.message}`));
@@ -214,6 +241,8 @@
     }
 
     function createDirectoryRecursive(dirPath) {
+        const fs = require('fs');
+        const path = require('path');
         var normalizedPath = path.normalize(dirPath);
         var parts = normalizedPath.split(path.sep);
 
